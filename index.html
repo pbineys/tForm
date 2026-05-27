@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Field Reporting Form Application</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Secure, offline-first web reporting application for educational field officers. Features auto-calc durations, geolocation tracking, and Google Sheets sync.">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="color-scheme" content="light dark">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="images/icon-192.png">
+</head>
+<body>
+
+  <!-- Top Progress Indicator for Network Status -->
+  <div id="network-bar" class="network-status-bar" role="presentation"></div>
+
+  <!-- Accessible Skip Link -->
+  <a href="#main-form" class="skip-link">Skip to Form Fields</a>
+
+  <!-- Mandatory Consent Screen Gatekeeper Modal -->
+  <div id="consent-overlay" class="consent-overlay" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+    <div class="consent-card">
+      <div class="consent-icon" aria-hidden="true">📋</div>
+      <h2 id="consent-title">Field Reporting Consent</h2>
+      <p>
+        To transition from manual reporting to digital, this application requires your consent. In compliance with educational operations and data accuracy standards:
+      </p>
+      
+      <div class="consent-permissions">
+        <div class="permission-item">
+          <span class="permission-bullet" aria-hidden="true">✔</span>
+          <div class="permission-text">
+            <h3>Device Geolocation Access</h3>
+            <p>Captures your current coordinates automatically upon form submission to verify school visits.</p>
+          </div>
+        </div>
+        <div class="permission-item">
+          <span class="permission-bullet" aria-hidden="true">✔</span>
+          <div class="permission-text">
+            <h3>Offline Local Storage</h3>
+            <p>Queues reports securely in your browser's private database (IndexedDB) if network connection is lost.</p>
+          </div>
+        </div>
+        <div class="permission-item">
+          <span class="permission-bullet" aria-hidden="true">✔</span>
+          <div class="permission-text">
+            <h3>Secure Direct Sync</h3>
+            <p>Transfers queued data serverlessly to the designated Municipal Google Sheet once you are back online.</p>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-weight: 500; font-size: 0.85rem; color: var(--text-color);">
+        By clicking Accept, you agree to these operational data requirements. Declining will restrict access to the reporting application.
+      </p>
+
+      <div class="consent-actions">
+        <button id="btn-decline-consent" class="btn btn-secondary">Decline</button>
+        <button id="btn-accept-consent" class="btn btn-primary">Accept & Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Layout (Hidden until Consent Gained) -->
+  <div id="main-content" class="container" style="display: none;">
+    <header>
+      <div>
+        <h1 id="app-title">Field Reporting System</h1>
+        <p class="subtitle">Educational Officers Monitoring & Supervision Form</p>
+      </div>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" type="button">
+        🌙
+      </button>
+    </header>
+
+    <main>
+      <!-- Location and Sync Activity Badge bar -->
+      <section aria-label="Operational Status" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <button id="location-badge" class="location-status-badge pending" aria-live="polite" type="button" title="Click to recapture location">
+          <span>🟡</span> <span>Requesting Geolocation coordinates...</span>
+        </button>
+        <div id="sync-status-text" style="font-size: 0.8rem; font-weight: 600; color: var(--primary-color); display: flex; align-items: center; gap: 8px;" aria-live="polite"></div>
+      </section>
+
+      <!-- Main Reporting Form -->
+      <form id="report-form" class="form-card" aria-labelledby="form-section-header" novalidate>
+        <h2 id="form-section-header">Field Report Submission</h2>
+        
+        <div class="form-grid">
+          
+          <!-- SECTION 1: OFFICER DETAILS -->
+          <div class="form-section-title">1. Officer & Visit Details</div>
+          
+          <div class="form-group">
+            <label for="officer-name">Name of Officer <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <input type="text" id="officer-name" name="officerName" placeholder="e.g. John Doe" required aria-required="true" aria-describedby="officer-name-error">
+            <span id="officer-name-error" class="error-message" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="schedule">Schedule <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <select id="schedule" name="schedule" required aria-required="true" aria-describedby="schedule-error">
+              <option value="" disabled selected>Select the relevant schedule</option>
+              <option value="Basic Schools">Basic Schools</option>
+              <option value="Community Participation">Community Participation</option>
+              <option value="Early Childhood Development">Early Childhood Development</option>
+              <option value="Examinations">Examinations</option>
+              <option value="Girl-Child">Girl-Child</option>
+              <option value="Guidance and Counselling">Guidance and Counselling</option>
+              <option value="Private Schools">Private Schools</option>
+              <option value="School Health Programme">School Health Programme</option>
+              <option value="Second Cycle Schools">Second Cycle Schools</option>
+              <option value="SISO-Abrem-Agona Circuit">SISO-Abrem-Agona Circuit</option>
+              <option value="SISO-Ayensudo Circuit">SISO-Ayensudo Circuit</option>
+              <option value="SISO-Dominase Circuit">SISO-Dominase Circuit</option>
+              <option value="SISO-Elmina Circuit">SISO-Elmina Circuit</option>
+              <option value="SISO-Essaman Circuit">SISO-Essaman Circuit</option>
+              <option value="SISO-Kissi Circuit">SISO-Kissi Circuit</option>
+              <option value="SISO-Komenda Circuit">SISO-Komenda Circuit</option>
+              <option value="SISO-Ntranoa Circuit">SISO-Ntranoa Circuit</option>
+              <option value="Special Education">Special Education</option>
+              <option value="STEM">STEM</option>
+              <option value="TVET">TVET</option>
+              <option value="Other">Other</option>
+            </select>
+            <span id="schedule-error" class="error-message" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="visit-date">Date of Visit/Activity <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <input type="date" id="visit-date" name="visitDate" required aria-required="true" aria-describedby="visit-date-error">
+            <span id="visit-date-error" class="error-message" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="school-visited">School/Station/Office Visited <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <input type="text" id="school-visited" name="schoolVisited" placeholder="e.g. Komenda Basic School" required aria-required="true" aria-describedby="school-visited-error">
+            <span id="school-visited-error" class="error-message" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="circuit">Circuit/Location <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <select id="circuit" name="circuit" required aria-required="true" aria-describedby="circuit-error">
+              <option value="" disabled selected>Select the circuit/location</option>
+              <option value="Essaman Circuit">Essaman Circuit</option>
+              <option value="Dominase Circuit">Dominase Circuit</option>
+              <option value="Elmina Circuit">Elmina Circuit</option>
+              <option value="Abrem-Agona Circuit">Abrem-Agona Circuit</option>
+              <option value="Komenda Circuit">Komenda Circuit</option>
+              <option value="Ayensudo Circuit">Ayensudo Circuit</option>
+              <option value="Ntranoa Circuit">Ntranoa Circuit</option>
+              <option value="Kissi Circuit">Kissi Circuit</option>
+              <option value="Muni. Educ. Office">Muni. Educ. Office</option>
+              <option value="Other">Other</option>
+            </select>
+            <span id="circuit-error" class="error-message" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="activity-name">Activity Name <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <select id="activity-name" name="activityName" required aria-required="true" aria-describedby="activity-name-error">
+              <option value="" disabled selected>Select the type of activity</option>
+              <option value="Follow-Up Visit">Follow-Up Visit</option>
+              <option value="International/National/Regional Programme">International/National/Regional Programme</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Monitoring/Supervision">Monitoring/Supervision</option>
+              <option value="PTA Meeting">PTA Meeting</option>
+              <option value="School Engagement">School Engagement</option>
+              <option value="School Programme">School Programme</option>
+              <option value="Seminar/Talks">Seminar/Talks</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Other">Other</option>
+            </select>
+            <span id="activity-name-error" class="error-message" role="alert"></span>
+          </div>
+
+          <!-- SECTION 2: OBJECTIVES AND ACTIVITIES -->
+          <div class="form-section-title">2. Objectives & Achievements</div>
+
+          <div class="form-group grid-full">
+            <label for="purpose">Purpose of the Activity <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <textarea id="purpose" name="purpose" placeholder="Clearly state the objective of the activity (minimum 20 characters)" required aria-required="true" minlength="20" aria-describedby="purpose-error purpose-help"></textarea>
+            <span id="purpose-help" class="help-text">Write a detailed description of the visit's primary intent.</span>
+            <span id="purpose-error" class="error-message" role="alert"></span>
+          </div>
+
+          <div class="form-group grid-full">
+            <label for="major-activities">Major Activities performed <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <textarea id="major-activities" name="majorActivities" placeholder="List key activities performed during the field visit" required aria-required="true" aria-describedby="major-activities-error"></textarea>
+            <span id="major-activities-error" class="error-message" role="alert"></span>
+          </div>
+
+          <!-- SECTION 3: STATISTICS -->
+          <div class="form-section-title">3. Headcount & Attendance</div>
+
+          <div class="form-group">
+            <label for="teachers-present">Teachers/Participants Present <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <input type="number" id="teachers-present" name="presentCount" min="1" placeholder="Integer value > 0" required aria-required="true" aria-describedby="teachers-present-error">
+            <span id="teachers-present-error" class="error-message" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="teachers-absent">Teachers/Participants Absent <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <input type="number" id="teachers-absent" name="absentCount" min="0" placeholder="Integer value >= 0" required aria-required="true" aria-describedby="teachers-absent-error">
+            <span id="teachers-absent-error" class="error-message" role="alert"></span>
+          </div>
+
+          <!-- SECTION 4: ORGANIZATIONAL DETAILS (OPTIONAL) -->
+          <div class="form-section-title">4. Context Data</div>
+
+          <div class="form-group">
+            <label for="organizers">Organizers</label>
+            <input type="text" id="organizers" name="organizers" placeholder="e.g. Municipal Education Office">
+          </div>
+
+          <div class="form-group">
+            <label for="venue">Venue</label>
+            <input type="text" id="venue" name="venue" placeholder="e.g. Conference Hall">
+          </div>
+
+          <div class="form-group grid-full">
+            <label for="topic-area">Topic or Area of Focus</label>
+            <input type="text" id="topic-area" name="topicArea" placeholder="e.g. STEM Integration in Classroom Instruction">
+          </div>
+
+          <div class="form-group grid-full">
+            <label for="summary">Summary of the Programme</label>
+            <textarea id="summary" name="summary" placeholder="Provide a brief highlights summary of the session"></textarea>
+          </div>
+
+          <!-- SECTION 5: SCHEDULE DURATION -->
+          <div class="form-section-title">5. Timeframe & Verification</div>
+
+          <div class="form-group">
+            <label for="start-date">Start Date & Time <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <input type="datetime-local" id="start-date" name="startDate" required aria-required="true" aria-describedby="start-date-error">
+            <span id="start-date-error" class="error-message" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="closing-time">Closing Date & Time <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <input type="datetime-local" id="closing-time" name="closingTime" required aria-required="true" aria-describedby="closing-time-error">
+            <span id="closing-time-error" class="error-message" role="alert"></span>
+          </div>
+
+          <div class="form-group grid-full">
+            <label for="duration">Duration (Auto-calculated)</label>
+            <input type="text" id="duration" name="duration" readonly tabindex="-1" placeholder="Will calculate automatically once times are populated" aria-live="polite">
+          </div>
+
+        </div>
+
+        <div style="margin-top: 2.5rem; display: flex; justify-content: flex-end;">
+          <button id="submit-btn" class="btn btn-primary btn-success" type="submit" style="width: 100%; max-width: 300px; font-size: 1.1rem; padding: 1rem 2rem;">
+            Submit Field Report
+          </button>
+        </div>
+      </form>
+
+      <!-- Offline Queued Items Dashboard Card -->
+      <aside class="dashboard-card" aria-labelledby="dashboard-title">
+        <div class="dashboard-header">
+          <h3 id="dashboard-title" class="dashboard-title">
+            <span>🗄️</span> Offline Submission Queue
+            <span id="offline-count-badge" class="badge">0</span>
+          </h3>
+          <button onclick="syncQueuedReports()" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" type="button">
+            🔄 Sync Now
+          </button>
+        </div>
+        <div id="submissions-queue" class="submissions-list" aria-live="polite">
+          <!-- Queued submissions lists will inject here dynamically -->
+        </div>
+      </aside>
+
+
+    </main>
+
+    <footer style="margin-top: 3rem; text-align: center; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+      <p>© 2026 Municipal Education Directorate. Field Monitoring Reporting Application.</p>
+      <p style="margin-top: 4px;">Hostable offline-first static client-side PWA. Syncs securely using direct spreadsheet webhooks.</p>
+    </footer>
+  </div>
+
+  <!-- Global UI Notification Toast -->
+  <div id="global-toast" class="global-toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Scripts: DB -> Sync -> App Logic -->
+  <script src="js/db.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/app.js"></script>
+  
+  <!-- Service Worker registration for offline PWA installation -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+          .catch(err => console.error('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
