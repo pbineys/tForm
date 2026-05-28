@@ -148,28 +148,14 @@ body {
   white-space: nowrap;
   border: 0;
 }
-.GES-Logo {
-  display: inline-flex;
-  align-items: center;
-  background-color: transparent;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-
-}
-.GES-Logo img {
-  height: 85px;
-  width: auto;
-  
-}
 
 /* ─── Typography ─────────────────────────────────────────────────────────────── */
 h1 {
-  display: inline-block;
   font-family: var(--font-heading);
-  font-weight: 650;
-  font-size: 2rem;
+  font-weight: 700;
+  font-size: 2.15rem;
   letter-spacing: -0.03em;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.2rem;
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
